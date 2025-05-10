@@ -31,6 +31,16 @@ onset_time_ms = pc.run_chronset(wav_file_path)
 print(f"Detected speech onset time: {onset_time_ms} ms")
 ```
 
+### Running the Gradio App
+
+To run the Gradio interface for interactive speech onset detection:
+
+```sh
+python src/pychronset/app.py
+```
+
+This will start a local web server, and you can access the app in your browser (usually at http://127.0.0.1:7860).
+
 ## Contributing
 
 <details>
