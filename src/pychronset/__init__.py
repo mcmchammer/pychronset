@@ -8,7 +8,7 @@ from scipy.stats import gmean
 from pychronset.utils.io import extract_thresholds_from_mat, load_audio
 from pychronset.utils.signal import (
     apply_gaussian_smoothing,
-    multitaper_spectrogram_approx,
+    exact_multitaper_spectrogram,
     normalize_feature,
 )
 
@@ -18,7 +18,9 @@ MIN_FEATURES_CRITERION = (
 )
 
 
-def extract_features(fs: int, f: np.ndarray, Sxx: np.ndarray) -> dict:  # noqa: N803
+def extract_features(
+    fs: int, f: np.ndarray, Sxx: np.ndarray, feature_time_step_ms: int = 1
+) -> dict:
     """
     Extract the six acoustic features from the spectrogram.
 
@@ -138,8 +140,15 @@ def extract_features(fs: int, f: np.ndarray, Sxx: np.ndarray) -> dict:  # noqa: 
     features["HarmonicPitch"] = np.array(harmonic_pitch)
 
     # Apply normalization and smoothing to all features
+    # The paper specifies 10ms smoothing.
+    # apply_gaussian_smoothing calculates sigma based on smoothing_window_ms
+    # assuming the input data has 1ms steps.
+    smoothing_duration_ms = 10
     for feature_name, data in features.items():
-        smoothed_data = apply_gaussian_smoothing(data, fs)
+        # Pass the intended smoothing window in ms.
+        # The `apply_gaussian_smoothing` function itself uses this to calculate sigma
+        # assuming the feature series has 1ms time steps (which it does, from spectrogram).
+        smoothed_data = apply_gaussian_smoothing(data, smoothing_window_ms=smoothing_duration_ms)
         features[feature_name] = normalize_feature(smoothed_data)
 
     return features
@@ -315,9 +324,17 @@ def run_chronset(
     window_length_ms = 10
     step_size_ms = 1
 
-    # Step 1 & 2: Multitaper Spectral Analysis (Approximated)
-    f, _, Sxx = multitaper_spectrogram_approx(  # noqa: N806
-        signal, fs, window_length_ms, step_size_ms
+    # Step 1 & 2: Exact Multitaper Spectral Analysis
+    # Parameters for exact_multitaper_spectrogram:
+    # num_tapers = 8 (as per paper)
+    # time_bandwidth_product (NW) = 5.0 (derived from paper: W=0.5kHz, L=10ms => NW=5)
+    f, t, Sxx = exact_multitaper_spectrogram(  # noqa: N806
+        signal,
+        fs,
+        window_length_ms=window_length_ms,
+        step_size_ms=step_size_ms,
+        num_tapers=8,
+        time_bandwidth_product=5.0,
     )
 
     # Handle cases where Sxx is empty (e.g., very short or silent signal)
@@ -326,7 +343,8 @@ def run_chronset(
         return None
 
     # Step 3: Extract and Process Features
-    features = extract_features(fs, f, Sxx)
+    # The feature_time_step_ms is determined by step_size_ms of the spectrogram
+    features = extract_features(fs, f, Sxx, feature_time_step_ms=step_size_ms)
 
     # Step 4: Automatic Onset Detection
     onset_time_ms = detect_speech_onset(
