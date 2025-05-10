@@ -7,13 +7,16 @@ An Automated Python Tool for Detecting Speech Onset  based on the Chronset algor
 Original paper:  
 [Roux, Frédéric & Armstrong, Blair & Carreiras, Manuel. (2016). Chronset: An automated tool for detecting speech onset. Behavior Research Methods. 49. 10.3758/s13428-016-0830-1](https://link.springer.com/article/10.3758/s13428-016-0830-1).  
 
+## Disclaimer
+
+**This package is still under evaluation. Please use it at your own risk.**
 
 ## Installing
 
 To install this package, run:
 
 ```sh
-pip install pychronset
+pip install git+https://github.com/mcmchammer/pychronset.git
 ```
 
 ## Using
