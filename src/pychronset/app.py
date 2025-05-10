@@ -132,6 +132,29 @@ def plot_signal_with_onset(selected_filename: str, all_data: list) -> plt.Figure
             x=onset_sample, color="r", linestyle="--", label=f"Onset: {onset_time_ms_val:.2f} ms"
         )
         ax.legend(fontsize=8)
+
+        # Zoom logic: 100 ms before and after the onset
+        window_duration_ms = 300  # milliseconds
+        window_samples = (window_duration_ms / 1000.0) * sr
+
+        x_min_zoom = onset_sample - window_samples
+        x_max_zoom = onset_sample + window_samples
+
+        # Ensure limits are within signal bounds
+        # time_samples ranges from 0 to len(signal) - 1
+        x_min_zoom = max(0, x_min_zoom)
+        x_max_zoom = min(len(signal) - 1, x_max_zoom)
+
+        # Apply zoom if the window is valid
+        if x_min_zoom < x_max_zoom:
+            ax.set_xlim(x_min_zoom, x_max_zoom)
+        else:
+            logger.warning(
+                f"Cannot apply zoom for {selected_filename}: "
+                f"calculated window [{x_min_zoom}, {x_max_zoom}] is invalid or too small. "
+                f"Onset at {onset_sample} samples, signal length {len(signal)} samples."
+            )
+
     elif isinstance(onset_time_ms_val, str) and (
         "Error" in onset_time_ms_val or "failed" in onset_time_ms_val.lower()
     ):
