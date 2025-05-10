@@ -6,6 +6,7 @@ to ensure correct functionality with sample input data.
 """
 
 import logging
+import os
 
 import numpy as np
 import soundfile as sf
@@ -39,6 +40,8 @@ def test_run_chronset():
     logger.info(f"Created dummy WAV file: {test_wav_file}")
 
     onset_time_ms = run_chronset(test_wav_file)
+
+    os.remove(test_wav_file)
 
     assert onset_time_ms is not None
 
