@@ -17,3 +17,10 @@ def test_load_audio():
     assert data is not None
     assert fs > 0
     assert len(data) > 0
+
+    weba_file = "tests/data/222373-19-13214177-task-nf2w-45472030-BraamBrummel-11-2.weba"
+    fs, data = load_audio(weba_file)
+
+    assert data is not None
+    assert fs > 0
+    assert len(data) > 0

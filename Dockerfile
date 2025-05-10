@@ -17,8 +17,18 @@ RUN --mount=type=cache,target=/var/cache/apt/ \
     groupadd --gid 1000 user && \
     useradd --create-home --no-log-init --gid 1000 --uid 1000 --shell /usr/bin/bash user && \
     chown user:user /opt/ && \
-    apt-get update && apt-get install --no-install-recommends --yes sudo && \
+    apt-get update && apt-get install --no-install-recommends --yes sudo ffmpeg locales && \
+    # Configure locale
+    sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    locale-gen en_US.UTF-8 && \
     echo 'user ALL=(root) NOPASSWD:ALL' > /etc/sudoers.d/user && chmod 0440 /etc/sudoers.d/user
+
+# Set locale environment variables
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+
 USER user
 
 # Configure the non-root user's shell.

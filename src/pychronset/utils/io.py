@@ -4,22 +4,66 @@ import logging
 import os
 
 import numpy as np
-from scipy.io import loadmat, wavfile
+from pydub import AudioSegment
+from pydub.exceptions import CouldntDecodeError
+from scipy.io import loadmat
 
 logger = logging.getLogger(__name__)
 
 
-def load_audio(wav_file_path: str) -> tuple[int | None, np.ndarray | None]:
-    """Load a WAV file and return sample rate and audio data."""
-    if not os.path.exists(wav_file_path):
-        raise FileNotFoundError(f"Audio file not found: {wav_file_path}")
+def load_audio(audio_file_path: str) -> tuple[int | None, np.ndarray | None]:
+    """Load an audio file and return sample rate and audio data."""
+    if not os.path.exists(audio_file_path):
+        raise FileNotFoundError(f"Audio file not found: {audio_file_path}")
     try:
-        sample_rate, data = wavfile.read(wav_file_path)
-        if data.ndim > 1:
-            data = data.mean(axis=1)  # Convert stereo to mono by averaging channels
-        return sample_rate, data.astype(np.float32)  # Ensure float32 for processing
+        audio = AudioSegment.from_file(audio_file_path)
+        # Convert to mono
+        audio = audio.set_channels(1)
+        # Get raw audio data as numpy array
+        # AudioSegment.get_array_of_samples() returns an array of samples.
+        # Each sample is an integer representing the amplitude.
+        # The data needs to be scaled to float32, typically in [-1.0, 1.0] range for processing.
+        # The maximum value for a signed 16-bit integer is 32767.
+        data = np.array(audio.get_array_of_samples()).astype(np.float32)
+
+        # Normalize to [-1.0, 1.0] if it's not already (depends on source format and pydub behavior)
+        # Pydub samples are integers based on sample_width. For 16-bit (2 bytes), max is 2**(8*2-1)-1 = 32767
+        # For 24-bit (3 bytes), max is 2**(8*3-1)-1 = 8388607
+        # For 32-bit (4 bytes), max is 2**(8*4-1)-1 = 2147483647
+        # We should normalize based on the actual max possible value for the sample width.
+        if audio.sample_width == 2 or audio.sample_width == 3:  # 16-bit
+            data = data / (2 ** (8 * audio.sample_width - 1))
+        elif audio.sample_width == 4:  # 32-bit float or int
+            # If it's already float, it might be in [-1, 1]. If int, needs scaling.
+            # Assuming it's int for now, consistent with other cases.
+            data = data / (2 ** (8 * audio.sample_width - 1))
+        # else: # 8-bit or other cases, might need different handling or pydub handles it.
+        # For simplicity, we assume common cases. If data is already float and in [-1,1], this might be an issue.
+        # However, get_array_of_samples usually gives integers.
+
+        # Ensure float32 for processing
+        data = data.astype(np.float32)
+
+        return audio.frame_rate, data
+    except CouldntDecodeError:
+        logger.error(
+            f"Could not decode audio file: {audio_file_path}. Ensure ffmpeg is installed and supports the format."
+        )
+        return None, None
+    except FileNotFoundError as e:
+        if e.filename in ("ffmpeg", "ffprobe"):
+            logger.error(
+                f"Error loading audio file {audio_file_path}: {e}. "
+                "This indicates that ffmpeg (which includes ffprobe) is not installed or not in your system's PATH. "
+                "Please install ffmpeg to support this audio format."
+            )
+        else:
+            logger.error(f"File not found error while loading audio file {audio_file_path}: {e}")
+        return None, None
     except Exception as e:
-        logger.info(f"Error loading audio file: {e}")
+        logger.error(
+            f"An unexpected error occurred while loading audio file {audio_file_path}: {e}"
+        )
         return None, None
 
 

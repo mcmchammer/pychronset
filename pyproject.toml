@@ -16,6 +16,7 @@ dependencies = [
     "soundfile>=0.13.1",
     "gradio>=4.0.0", # Added gradio
     "matplotlib>=3.10.3",
+    "pydub>=0.25.1", # Added pydub for extended audio format support
 ]
 
 [project.urls]  # https://packaging.python.org/en/latest/specifications/well-known-project-urls/#well-known-labels

@@ -2,7 +2,7 @@
 Provide a Gradio-based interface for speech onset detection using Pychronset.
 
 Features:
-- Upload and process .wav files for onset detection.
+- Upload and process audio files (e.g., .wav, .weba) for onset detection.
 - Visualize signals and detected onsets.
 - Download results as a CSV file.
 """
@@ -220,12 +220,12 @@ def _process_single_file_for_inspection_worker(
 
 def process_wav_files_and_prepare_inspection(files: list) -> tuple:
     """
-    Process uploaded .wav files for onset detection and prepare data for inspection.
+    Process uploaded audio files for onset detection and prepare data for inspection.
 
     Parameters
     ----------
     files : list
-        List of uploaded .wav files.
+        List of uploaded audio files.
 
     Returns
     -------
@@ -355,14 +355,14 @@ with gr.Blocks(theme=gr.themes.Base()) as demo:
     with gr.Tabs() as tabs:
         with gr.TabItem("Process Files", id=0):
             gr.Markdown(
-                "Upload one or more .wav files. Results will be available as a downloadable CSV, "
+                "Upload one or more audio files (e.g., .wav, .weba). Results will be available as a downloadable CSV, "
                 "and visualizations will be available in the 'Inspect Results' tab."
             )
             with gr.Row():
                 wav_input = gr.File(
                     file_count="multiple",
-                    file_types=[".wav", ".WAV"],
-                    label="Upload .wav files",
+                    file_types=[".wav", ".WAV", ".weba", ".WEBA"],
+                    label="Upload audio files",
                 )
                 csv_output = gr.File(label="Download Results (CSV)")
             process_button = gr.Button("Process Files and Prepare Inspection")
