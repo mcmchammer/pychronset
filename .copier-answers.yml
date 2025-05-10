@@ -1,0 +1,12 @@
+_commit: v1.5.1
+_src_path: gh:superlinear-ai/substrate
+author_email: hammer.mcmc@gmail.com
+author_name: Kevin Diependaele
+project_description: An Automated Tool for Detecting Speech Onset
+project_name: pychronset
+project_type: package
+project_url: https://github.com/mcmchammer/pychronset
+python_version: '3.10'
+typing: optional
+with_conventional_commits: true
+with_typer_cli: false
